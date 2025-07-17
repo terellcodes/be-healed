@@ -1,15 +1,19 @@
+from research_graph import get_research_graph
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from typing import List
+from dotenv import load_dotenv
+import os
 
-# Import routers here
-# from app.routers import users, auth
+env_path = os.path.join(os.path.dirname(__file__), "./.env")
+load_dotenv(env_path)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     print("Starting up...")
+    research_graph = get_research_graph()
     yield
     # Shutdown
     print("Shutting down...")
