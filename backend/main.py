@@ -46,8 +46,8 @@ app = FastAPI(
 
 # Configure CORS
 origins = [
-    "http://localhost:3000",  # Next.js frontend
-    "http://127.0.0.1:3000",
+    "http://localhost:3001",  # Next.js frontend
+    "http://127.0.0.1:3001",
 ]
 
 app.add_middleware(
@@ -56,6 +56,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],  # Expose headers to the frontend
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 @app.get("/")
@@ -71,25 +73,40 @@ async def health_check():
 
 @app.post("/api/query", response_model=QueryResponse)
 async def process_query(request: QueryRequest):
+    # Debug print
+    print("Received request:", request)
+    print("Request query:", request.query)
+    print("Request type:", type(request))
+    
     if not research_graph:
+        print("Research graph not initialized")
         raise HTTPException(status_code=503, detail="Research graph not initialized")
     
     try:
+        print(f"Processing query: {request.query}")
         # Prepare input for the research graph
         inputs = {"messages": [HumanMessage(content=request.query)]}
+        print(f"Prepared inputs: {inputs}")
         
         # Process through the research graph
+        print("Invoking research graph...")
         response = await research_graph.ainvoke(inputs)
+        print(f"Research graph response: {response}")
         
         # Get the last message from the response
         final_message = response["messages"][-1]
+        print(f"Final message: {final_message}")
         
         # Extract the content and any additional context
-        return QueryResponse(
+        result = QueryResponse(
             answer=final_message.content if hasattr(final_message, "content") else str(final_message),
             context=final_message.additional_kwargs if hasattr(final_message, "additional_kwargs") else None
         )
+        print(f"Returning result: {result}")
+        return result
     except Exception as e:
+        print(f"Error occurred: {str(e)}")
+        print(f"Error type: {type(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
 # Include routers here

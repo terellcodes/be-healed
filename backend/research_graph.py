@@ -11,8 +11,20 @@ from langchain_core.tools import Tool
 from langgraph.graph import StateGraph, END
 from dotenv import load_dotenv
 import os
+from uuid import uuid4
+from langsmith import Client
 
+# Load environment variables
 load_dotenv(os.path.join(os.path.dirname(__file__), "./.env"))
+
+# Debug print
+print("LANGCHAIN_API_KEY:", bool(os.getenv("LANGCHAIN_API_KEY")))  # Don't print the actual key
+print("LANGCHAIN_TRACING_V2:", os.getenv("LANGCHAIN_TRACING_V2"))
+print("LANGCHAIN_ENDPOINT:", os.getenv("LANGCHAIN_ENDPOINT"))
+print("LANGCHAIN_PROJECT:", os.getenv("LANGCHAIN_PROJECT"))
+
+# Initialize LangSmith client
+client = Client()
 
 # use context from previous parts of agent to achieve it's task
 class AgentState(TypedDict):
@@ -27,6 +39,9 @@ def should_continue(state):
     return END
 
 def get_research_graph():
+    # Set unique run ID for tracing
+    os.environ["LANGCHAIN_PROJECT"] = f"be-healed-{uuid4().hex[:8]}"
+    
     tavily_tool = TavilySearchResults(max_results=5)
     tool_belt = [
         tavily_tool,
@@ -40,8 +55,6 @@ def get_research_graph():
     model = ChatOpenAI(model="gpt-4.1-nano", temperature=0)
     model = model.bind_tools(tool_belt)
 
-
-
     # we call the tool with the payload provided by the model
     tool_node = ToolNode(tool_belt)
 
@@ -50,20 +63,17 @@ def get_research_graph():
     def call_model(state):
         messages = state["messages"]
         response = model.invoke(messages)
-        return {"messages" : [response]}
+        return {"messages": [response]}
 
     # uncompiled_graph.add_node("planner", planner_node)
     uncompiled_graph.add_node("agent", call_model)
     uncompiled_graph.add_node("action", tool_node)
     uncompiled_graph.set_entry_point("agent")
 
-
-
     uncompiled_graph.add_conditional_edges(
         "agent",
         should_continue
     )
-
 
     uncompiled_graph.add_edge("action", "agent")
     research_agent_graph = uncompiled_graph.compile()

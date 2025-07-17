@@ -1,11 +1,25 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-export async function fetchApi(endpoint: string, options: RequestInit = {}) {
+// Define the structure of our API request bodies
+interface QueryRequestBody {
+  query: string;
+}
+
+type ApiRequestBody = QueryRequestBody;
+
+export async function fetchApi(endpoint: string, options: Omit<RequestInit, 'body'> & { body?: ApiRequestBody } = {}) {
   const url = `${API_URL}${endpoint}`
+  
+  // If body is already a string, don't stringify it again
+  const body = options.body ? JSON.stringify(options.body) : undefined;
+
   const response = await fetch(url, {
     ...options,
+    body,
+    credentials: 'include',  // Include credentials in the request
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...options.headers,
     },
   })
@@ -17,7 +31,22 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   return response.json()
 }
 
+export interface QueryResponse {
+  answer: string;
+  context?: Record<string, unknown>;
+}
+
 export const api = {
   health: () => fetchApi('/health'),
-  // Add more API endpoints here as needed
+  query: (query: string) => {
+    // Validate query before sending
+    if (!query || query.trim().length === 0) {
+      throw new Error('Query cannot be empty');
+    }
+    
+    return fetchApi('/api/query', {
+      method: 'POST',
+      body: { query: query.trim() },
+    }) as Promise<QueryResponse>;
+  },
 } 
