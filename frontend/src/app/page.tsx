@@ -1,51 +1,81 @@
-import { headers } from 'next/headers'
+'use client';
 
-async function getApiHealth() {
-  try {
-    const res = await fetch('http://localhost:8000/health', {
-      headers: headers(),
-      next: {
-        revalidate: 0
-      }
-    })
-    return res.json()
-  } catch (error) {
-    console.error('Error fetching API health:', error)
-    return { status: 'error', message: 'API is unreachable' }
-  }
+import { useState } from 'react';
+import { Cog6ToothIcon } from '@heroicons/react/24/outline';
+import Sidebar from '@/components/Sidebar';
+import ChatMessage from '@/components/ChatMessage';
+import ChatInput from '@/components/ChatInput';
+
+interface Message {
+  id: string;
+  content: string;
+  isAI: boolean;
+  timestamp: string;
 }
 
-export default async function Home() {
-  const apiHealth = await getApiHealth()
+export default function Home() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      content: "Hello! I'm your AI assistant. How can I help you today?",
+      isAI: true,
+      timestamp: new Date().toLocaleTimeString(),
+    },
+  ]);
+
+  const handleSendMessage = (content: string) => {
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content,
+      isAI: false,
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "I'm processing your request...",
+        isAI: true,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+      setMessages((prev) => [...prev, aiResponse]);
+    }, 1000);
+  };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Welcome to Be Healed
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#1a1a1a] text-white">
+      <header className="bg-[#1e1e1e] border-b border-gray-700 p-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold">PDF RAG IDE</h1>
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="text-gray-400 hover:text-white"
+        >
+          <Cog6ToothIcon className="h-6 w-6" />
+        </button>
+      </header>
 
-      <div className="relative flex place-items-center">
-        <h1 className="text-4xl font-bold">Be Healed</h1>
-      </div>
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-3 lg:text-left">
-        <div className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
-          <h2 className="mb-3 text-2xl font-semibold">
-            API Status{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Status: {apiHealth.status}
-          </p>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Version: {apiHealth.version}
-          </p>
+      <main className="container mx-auto max-w-4xl h-[calc(100vh-4rem)] flex flex-col">
+        <div className="flex-1 overflow-y-auto">
+          {messages.map((message) => (
+            <ChatMessage
+              key={message.id}
+              message={message.content}
+              isAI={message.isAI}
+              timestamp={message.timestamp}
+            />
+          ))}
         </div>
-      </div>
-    </main>
-  )
+        <ChatInput onSendMessage={handleSendMessage} />
+      </main>
+
+      <footer className="fixed bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500">
+        Built with Next.js, Tailwind CSS, Framer Motion, and FastAPI — IDE Inspired
+      </footer>
+    </div>
+  );
 }
