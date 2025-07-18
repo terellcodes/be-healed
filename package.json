@@ -1,7 +1,8 @@
 {
-  "dependencies": {
-    "@heroicons/react": "^2.2.0",
-    "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   }
 }
