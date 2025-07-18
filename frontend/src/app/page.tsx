@@ -17,6 +17,7 @@ interface Message {
 
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [systemPrompt, setSystemPrompt] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -48,8 +49,8 @@ export default function Home() {
     setMessages((prev) => [...prev, loadingMessage]);
 
     try {
-      // Call research graph API
-      const response = await api.query(content);
+      // Call research graph API with system prompt
+      const response = await api.query(content, systemPrompt);
       
       // Replace loading message with response
       setMessages((prev) => prev.map(msg => 
@@ -92,7 +93,12 @@ export default function Home() {
         </button>
       </header>
 
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)}
+        systemPrompt={systemPrompt}
+        onSystemPromptChange={setSystemPrompt}
+      />
 
       <main className="container mx-auto max-w-4xl h-[calc(100vh-4rem)] flex flex-col">
         <div className="flex-1 overflow-y-auto">

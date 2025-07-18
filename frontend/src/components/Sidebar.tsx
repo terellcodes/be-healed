@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { XMarkIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  onSystemPromptChange: (prompt: string) => void;
+  systemPrompt: string;
 }
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, onSystemPromptChange, systemPrompt }: SidebarProps) {
   return (
     <div 
       className={`fixed left-0 top-0 h-full bg-[#1e1e1e] text-white w-64 transform transition-transform duration-300 ease-in-out ${
@@ -45,6 +47,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <textarea
               className="w-full bg-[#2d2d2d] rounded-md px-3 py-2 text-sm h-32 resize-none"
               placeholder="Enter system prompt..."
+              value={systemPrompt}
+              onChange={(e) => onSystemPromptChange(e.target.value)}
             />
           </div>
 

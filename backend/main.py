@@ -1,11 +1,11 @@
-from research_graph import get_research_graph
+from research_graph import get_research_graph, system_prompt
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from typing import List, Dict
+from typing import List, Dict, Optional
 from dotenv import load_dotenv
 import os
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 
 env_path = os.path.join(os.path.dirname(__file__), "./.env")
@@ -16,6 +16,7 @@ research_graph = None
 
 class QueryRequest(BaseModel):
     query: str
+    systemPrompt: Optional[str] = None
 
 class QueryResponse(BaseModel):
     answer: str
@@ -48,6 +49,8 @@ app = FastAPI(
 origins = [
     "http://localhost:3001",  # Next.js frontend
     "http://127.0.0.1:3001",
+    "http://localhost:3000",  # Next.js frontend
+    "http://127.0.0.1:3000",
 ]
 
 app.add_middleware(
@@ -85,7 +88,11 @@ async def process_query(request: QueryRequest):
     try:
         print(f"Processing query: {request.query}")
         # Prepare input for the research graph
-        inputs = {"messages": [HumanMessage(content=request.query)]}
+        messages = []
+        messages.append(SystemMessage(content=system_prompt))
+        messages.append(HumanMessage(content=request.query))
+        
+        inputs = {"messages": messages}
         print(f"Prepared inputs: {inputs}")
         
         # Process through the research graph

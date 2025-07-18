@@ -3,6 +3,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 // Define the structure of our API request bodies
 interface QueryRequestBody {
   query: string;
+  systemPrompt?: string;
 }
 
 type ApiRequestBody = QueryRequestBody;
@@ -38,7 +39,7 @@ export interface QueryResponse {
 
 export const api = {
   health: () => fetchApi('/health'),
-  query: (query: string) => {
+  query: (query: string, systemPrompt?: string) => {
     // Validate query before sending
     if (!query || query.trim().length === 0) {
       throw new Error('Query cannot be empty');
@@ -46,7 +47,10 @@ export const api = {
     
     return fetchApi('/api/query', {
       method: 'POST',
-      body: { query: query.trim() },
+      body: { 
+        query: query.trim(),
+        systemPrompt
+      },
     }) as Promise<QueryResponse>;
   },
 } 
