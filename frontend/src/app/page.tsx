@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import ChatMessage from '@/components/ChatMessage';
 import ChatInput from '@/components/ChatInput';
+import Settings from '@/components/Settings';
 import { api } from '@/lib/api';
 
 interface Message {
@@ -15,7 +16,7 @@ interface Message {
 }
 
 export default function Home() {
-  const [systemPrompt, setSystemPrompt] = useState('');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -26,7 +27,6 @@ export default function Home() {
   ]);
 
   const handleSendMessage = async (content: string) => {
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       content,
@@ -35,7 +35,6 @@ export default function Home() {
     };
     setMessages((prev) => [...prev, userMessage]);
 
-    // Add loading message
     const loadingId = (Date.now() + 1).toString();
     const loadingMessage: Message = {
       id: loadingId,
@@ -47,10 +46,8 @@ export default function Home() {
     setMessages((prev) => [...prev, loadingMessage]);
 
     try {
-      // Call research graph API with system prompt
-      const response = await api.query(content, systemPrompt);
+      const response = await api.query(content);
       
-      // Replace loading message with response
       setMessages((prev) => prev.map(msg => 
         msg.id === loadingId 
           ? {
@@ -63,7 +60,6 @@ export default function Home() {
           : msg
       ));
     } catch (error) {
-      // Replace loading message with error
       setMessages((prev) => prev.map(msg => 
         msg.id === loadingId 
           ? {
@@ -80,11 +76,23 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a] text-white">
-      <header className="bg-[#1e1e1e] border-b border-gray-700 p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Be Healed Research Assistant</h1>
+    <div className="min-h-screen bg-[#1A1B1E] text-white">
+      <header className="bg-[#1A1B1E] px-4 py-2 border-b border-[#2D3139] flex justify-between items-center">
+        <h1 className="text-lg font-medium">Be Healed Research Assistant</h1>
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-[#2D3139] rounded"
+        >
+          <Cog6ToothIcon className="h-5 w-5" />
+        </button>
       </header>
-      <main className="container mx-auto max-w-4xl h-[calc(100vh-4rem)] flex flex-col">
+
+      <Settings 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
+
+      <main className="flex flex-col h-[calc(100vh-48px)]">
         <div className="flex-1 overflow-y-auto">
           {messages.map((message) => (
             <ChatMessage
@@ -96,12 +104,14 @@ export default function Home() {
             />
           ))}
         </div>
-        <ChatInput onSendMessage={handleSendMessage} />
-      </main>
 
-      <footer className="fixed bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500">
-        Built with Next.js, Tailwind CSS, FastAPI, and LangChain
-      </footer>
+        <div className="p-4 bg-[#1A1B1E]">
+          <ChatInput onSendMessage={handleSendMessage} />
+          <div className="mt-2 text-xs text-center text-gray-500">
+            Built with Next.js, TailwindCSS, FastAPI, and LangChain
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
