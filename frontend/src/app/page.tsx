@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
-import Sidebar from '@/components/Sidebar';
 import ChatMessage from '@/components/ChatMessage';
 import ChatInput from '@/components/ChatInput';
 import { api } from '@/lib/api';
@@ -16,7 +15,6 @@ interface Message {
 }
 
 export default function Home() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -85,21 +83,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#1a1a1a] text-white">
       <header className="bg-[#1e1e1e] border-b border-gray-700 p-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">Be Healed Research Assistant</h1>
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="text-gray-400 hover:text-white"
-        >
-          <Cog6ToothIcon className="h-6 w-6" />
-        </button>
       </header>
-
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)}
-        systemPrompt={systemPrompt}
-        onSystemPromptChange={setSystemPrompt}
-      />
-
       <main className="container mx-auto max-w-4xl h-[calc(100vh-4rem)] flex flex-col">
         <div className="flex-1 overflow-y-auto">
           {messages.map((message) => (
