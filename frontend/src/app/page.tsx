@@ -17,6 +17,8 @@ interface Message {
 
 export default function Home() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [openaiKey, setOpenaiKey] = useState('');
+  const [tavilyKey, setTavilyKey] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -25,6 +27,11 @@ export default function Home() {
       timestamp: new Date().toISOString(),
     },
   ]);
+
+  const handleSaveKeys = (openaiKey: string, tavilyKey: string) => {
+    setOpenaiKey(openaiKey);
+    setTavilyKey(tavilyKey);
+  };
 
   const handleSendMessage = async (content: string) => {
     const userMessage: Message = {
@@ -46,7 +53,7 @@ export default function Home() {
     setMessages((prev) => [...prev, loadingMessage]);
 
     try {
-      const response = await api.query(content);
+      const response = await api.query(content, openaiKey, tavilyKey);
       
       setMessages((prev) => prev.map(msg => 
         msg.id === loadingId 
@@ -90,6 +97,9 @@ export default function Home() {
       <Settings 
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        onSaveKeys={handleSaveKeys}
+        openaiKey={openaiKey}
+        tavilyKey={tavilyKey}
       />
 
       <main className="flex flex-col h-[calc(100vh-48px)]">
